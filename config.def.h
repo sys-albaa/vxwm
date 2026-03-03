@@ -56,11 +56,15 @@ static const int sidepad = 5;       /* horizontal padding of bar */
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
 #if OCCUPIED_TAGS_DECORATION
-static const char *occupiedtags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char *occupiedtags[] = { "1+", "2+", "3+", "4+", "5+", "6+", "7+", "8+", "9+" };
 #endif
 
 #if INFINITE_TAGS
 #define MOVE_CANVAS_STEP 120 /* Defines how many pixel will be jumped when using movecanvas function */
+#endif
+
+#if INFINITE_TAGS && IT_SHOW_COORDINATES_IN_BAR
+#define COORDINATES_DIVISOR 10 /* Defines by what number coordinates on the bar will be divided, can be used for making numbers smaller which makes navigation easier */
 #endif
 
 #if MOVE_RESIZE_WITH_KEYBOARD

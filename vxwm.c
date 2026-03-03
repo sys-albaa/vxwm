@@ -848,21 +848,26 @@ drawbar(Monitor *m)
 #endif
 		x += w;
 	}
+
+	w = TEXTW(m->ltsymbol);
+	drw_setscheme(drw, scheme[SchemeNorm]);
+	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+
 #if INFINITE_TAGS && IT_SHOW_COORDINATES_IN_BAR
+  #if COORDINATES_DIVISOR <= 0
+    #undef COORDINATES_DIVISOR
+    #define COORDINATES_DIVISOR 1
+  #endif
   int tagidx = getcurrenttag(m);
   char coords[64];
   snprintf(coords, sizeof(coords), "[x%d y%d]", 
-          m->canvas[tagidx].cx / 10,
-          m->canvas[tagidx].cy / 10); // Delete 10 if you want to get the most accurate values
+          m->canvas[tagidx].cx / COORDINATES_DIVISOR,
+          m->canvas[tagidx].cy / COORDINATES_DIVISOR);
   w = TEXTW(coords);
   drw_setscheme(drw, scheme[SchemeNorm]);
   drw_text(drw, x, 0, w, bh, lrpad / 2, coords, 0);
   x += w;
 #endif
-
-	w = TEXTW(m->ltsymbol);
-	drw_setscheme(drw, scheme[SchemeNorm]);
-	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
 	if ((w = m->ww - tw - x) > bh) {
 		if (m->sel) {
