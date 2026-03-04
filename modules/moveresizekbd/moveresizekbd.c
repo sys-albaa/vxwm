@@ -79,8 +79,6 @@ moveresize(const Arg *arg)
 
     XRaiseWindow(dpy, c->win);
 
-
-
     if (selmon->lt[selmon->sellt]->arrange != NULL) {
         resize(c,
                c->x + dx,

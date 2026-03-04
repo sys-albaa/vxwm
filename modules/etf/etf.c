@@ -29,7 +29,7 @@ enhancedtogglefloating(const Arg *arg)
     warptoclient(selmon->sel); // larptoclient(selmon->sel);
 #endif
 }
-#else // fuck this shit i almost pulled out all my hair when i wrote this, but atleast it works lol
+#else
 void
 enhancedtogglefloating(const Arg *arg)
 {
