@@ -75,6 +75,7 @@ Even though this sounds complex, it is actually pretty lightweight ~250 l.o.c, a
 
 
 /* Misc */
+#define AUTOSTART 0 // Support for vxwm being able to start apps defined in config.h in startup.
 #define FULLSCREEN 0 // Support for toggling fullscreen.
 #define MOVE_IN_TILED 0 // Support for moving windows in tiled mode.
 #define EWMH_TAGS 0 // Support for EWMH tags, recommended if you want to use external bars with less pain

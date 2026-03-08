@@ -2730,8 +2730,14 @@ main(int argc, char *argv[])
 		die("vxwm - "VERSION);
   if (argc == 2 && !strcmp("-srcdir", argv[1]))
     die(SRCDIR);
+  if (argc == 2 && !strcmp("-ignoreautostart", argv[1]))
+    printf("Ignoring autostart");
 	else if (argc != 1)
-		die("usage: vxwm [-v] [-srcdir]");
+		die("usage: vxwm [-v] [-srcdir]"
+#if AUTOSTART
+         " [-ignoreautostart]"
+#endif
+       );
 	if (!setlocale(LC_CTYPE, "") || !XSupportsLocale())
 		fputs("warning: no locale support\n", stderr);
 	if (!(dpy = XOpenDisplay(NULL)))
@@ -2747,6 +2753,10 @@ main(int argc, char *argv[])
 		die("pledge");
 #endif /* __OpenBSD__ */
 	scan();
+#if AUTOSTART
+  if (!(argc == 2 && !strcmp("-ignoreautostart", argv[1])))
+    runautostart();
+#endif
 	run();
 	cleanup();
 	XCloseDisplay(dpy);

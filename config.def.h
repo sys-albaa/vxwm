@@ -72,6 +72,15 @@ static const char *occupiedtags[] = { "1+", "2+", "3+", "4+", "5+", "6+", "7+", 
 #define RESIZE_WITH_KEYBOARD_STEP 50 /* Defines by how many pixels windows will be resized with keyboard */
 #endif
 
+#if AUTOSTART
+/* vxwm will execute this on startup (can be skipped with -ignoreautostart vxwm flag). */
+
+static const char *const autostart[] = {
+	"st",
+	NULL /* must end with NULL */
+};
+#endif
+
 static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class

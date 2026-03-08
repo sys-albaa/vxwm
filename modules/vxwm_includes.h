@@ -43,3 +43,7 @@
 #if DIRECTIONAL_MOVE
 #include "directionalmove/directionalmove.h"
 #endif
+
+#if AUTOSTART
+#include "autostart/autostart.h"
+#endif
