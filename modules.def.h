@@ -16,7 +16,7 @@ Your windows aren't "on" tags. They are placed on a massive, invisible surface. 
 Instead of managing "layers" or "hidden states," you manage position.
 
 Want more space? Slide the view over.
-Can't find a window? Swicth your focus to it, and the world slides until that window is right under your nose.
+Can't find a window? Switch your focus to it, and the world slides until that window is right under your nose.
 Lost? Hit the "homecanvas" keybind to snap your view back to the start.
 Even though this sounds complex, it is actually pretty lightweight ~250 l.o.c, and is very easy to use.
  
@@ -28,9 +28,9 @@ Even though this sounds complex, it is actually pretty lightweight ~250 l.o.c, a
 /* Move/Resize */
 #define BETTER_RESIZE 1 // Enables 8 sided window resize.
 #define BR_CHANGE_CURSOR 1 // When resizing windows while having BETTER_RESIZE set to 1, the cursor will change depending on from which side you are resizing.
-#define LOCK_MOVE_RESIZE_REFRESH_RATE 1 // Recomended to use on every pc, because cpu (software) rendered apps like ST will lagg when resizing even if you have a good pc.
-#define USE_RESIZECLIENT_FUNC 0 // Use resizeclient function of instead of resize function which ignores window's resize hints, not recommended.
-#define RESIZINIG_WINDOWS_IN_ALL_LAYOUTS_FLOATS_THEM 0 // yeah.
+#define LOCK_MOVE_RESIZE_REFRESH_RATE 1 // Recommended to use on every pc, because cpu (software) rendered apps like ST will lag when resizing even if you have a good pc.
+#define USE_RESIZECLIENT_FUNC 0 // Use resizeclient function instead of resize function which ignores window's resize hints, not recommended.
+#define RESIZING_WINDOWS_IN_ALL_LAYOUTS_FLOATS_THEM 0 // yeah.
 #define MOVE_RESIZE_WITH_KEYBOARD 1 // Allows to move and resize windows with keyboard.
 
 /* Kind of eye candy */
