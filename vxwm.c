@@ -820,7 +820,6 @@ drawbar(Monitor *m)
 #if !BAR_PADDING
 		drw_text(drw, m->ww - tw, 0, tw, bh, 0, stext, 0);
 #else
-//  drw_text(drw, m->ww - sw - 2 * sp, 0, sw, bh, 0, stext, 0); this was causing the solved issue 2
     drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0);
 #endif
 	}
@@ -898,6 +897,7 @@ drawbar(Monitor *m)
 		}
 	}
 	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+  XRaiseWindow(dpy, m->barwin);
 }
 
 void
