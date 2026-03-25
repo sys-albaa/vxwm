@@ -77,6 +77,13 @@ vxwm 2.1 // by solyn (wh1tepearl's child)
 		                          } 
 #endif
 
+/* This is purely for a bit less sucky config */
+#if !XRDB
+#define MAYBE_CONST const
+#else
+#define MAYBE_CONST
+#endif
+
 /* enums */
 enum { CurNormal, CurResize, CurMove,
 #if BETTER_RESIZE && BR_CHANGE_CURSOR
