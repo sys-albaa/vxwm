@@ -23,7 +23,7 @@ vxwm: ${OBJ}
 	${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
-	rm -f vxwm ${OBJ} dwm-${VERSION}.tar.gz
+	rm -f vxwm ${OBJ} vxwm-${VERSION}.tar.gz
 
 dist: clean
 	mkdir -p vxwm-${VERSION}

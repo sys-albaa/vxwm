@@ -47,3 +47,7 @@
 #if AUTOSTART
 #include "autostart/autostart.h"
 #endif
+
+#if EXTERNAL_BARS
+#include "externalbars/externalbars.h"
+#endif

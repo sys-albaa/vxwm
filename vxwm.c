@@ -194,6 +194,9 @@ struct Monitor {
 #if INFINITE_TAGS
   CanvasOffset *canvas;
 #endif
+#if EXTERNAL_BARS
+  int strut_top, strut_bottom, strut_left, strut_right;
+#endif
 };
 
 typedef struct {
@@ -763,6 +766,9 @@ destroynotify(XEvent *e)
 
 	if ((c = wintoclient(ev->window)))
 		unmanage(c, 1);
+#if EXTERNAL_BARS
+  externalbars_unregister(ev->window);
+#endif
 }
 
 void
@@ -1319,9 +1325,17 @@ maprequest(XEvent *e)
 {
 	static XWindowAttributes wa;
 	XMapRequestEvent *ev = &e->xmaprequest;
-
+ 
 	if (!XGetWindowAttributes(dpy, ev->window, &wa) || wa.override_redirect)
 		return;
+#if EXTERNAL_BARS
+	if (externalbars_hasstrut(ev->window)) {
+		externalbars_register(ev->window);
+		XMapWindow(dpy, ev->window);
+		XSelectInput(dpy, ev->window, PropertyChangeMask|StructureNotifyMask);
+		return;
+	}
+#endif
 	if (!wintoclient(ev->window))
 		manage(ev->window, &wa);
 }
@@ -1557,6 +1571,17 @@ propertynotify(XEvent *e)
 	Client *c;
 	Window trans;
 	XPropertyEvent *ev = &e->xproperty;
+
+#if EXTERNAL_BARS
+  if (ev->atom == XInternAtom(dpy, "_NET_WM_STRUT_PARTIAL", False) ||
+      ev->atom == XInternAtom(dpy, "_NET_WM_STRUT", False)) {
+    if (ev->state == PropertyNewValue)
+      externalbars_register(ev->window);
+    else
+      externalbars_unregister(ev->window);
+    return;
+  }
+#endif
 
 	if ((ev->window == root) && (ev->atom == XA_WM_NAME))
 		updatestatus();
@@ -2210,14 +2235,28 @@ tile(Monitor *m)
 void
 togglebar(const Arg *arg)
 {
-	selmon->showbar = !selmon->showbar;
-	updatebarpos(selmon);
+    selmon->showbar = !selmon->showbar;
+    updatebarpos(selmon);
+
+    int bar_y;
+    if (selmon->showbar) {
+        bar_y = selmon->by;
+    } else {
+        if (topbar) {
+            bar_y = -bh;
+        } else {
+            bar_y = selmon->mh + bh;
+        }
+    }
+
 #if !BAR_PADDING
-	XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, selmon->by, selmon->ww, bh);
+    XMoveResizeWindow(dpy, selmon->barwin, selmon->wx, bar_y, selmon->ww, bh);
 #else
-  XMoveResizeWindow(dpy, selmon->barwin, selmon->wx + sp, selmon->by + vp, selmon->ww - 2 * sp, bh);
+    int final_y = (selmon->showbar) ? (bar_y + vp) : bar_y;
+    XMoveResizeWindow(dpy, selmon->barwin, selmon->wx + sp, final_y, selmon->ww - 2 * sp, bh);
 #endif
-	arrange(selmon);
+
+    arrange(selmon);
 }
 
 void
@@ -2325,6 +2364,9 @@ unmapnotify(XEvent *e)
 		else
 			unmanage(c, 0);
 	}
+#if EXTERNAL_BARS
+  externalbars_unregister(ev->window);
+#endif
 }
 
 void
@@ -2374,6 +2416,14 @@ updatebarpos(Monitor *m)
 #else
     m->by = -bh - vp;
 #endif
+#if EXTERNAL_BARS
+    m->wx += m->strut_left;
+    m->ww -= m->strut_left + m->strut_right;
+    m->wy += m->strut_top;
+    m->wh -= m->strut_top + m->strut_bottom;
+    if (m->ww < 1) m->ww = 1;
+    if (m->wh < 1) m->wh = 1;
+ #endif
 }
 
 void

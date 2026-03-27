@@ -51,3 +51,7 @@
 #if AUTOSTART
 #include "autostart/autostart.c"
 #endif
+
+#if EXTERNAL_BARS
+#include "externalbars/externalbars.c"
+#endif
