@@ -458,10 +458,17 @@ applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact)
 void
 arrange(Monitor *m)
 {
+#if WINDOWMAP
+	XGrabServer(dpy);
+#endif
 	if (m)
 		showhide(m->stack);
 	else for (m = mons; m; m = m->next)
 		showhide(m->stack);
+#if WINDOWMAP
+	XUngrabServer(dpy);
+	XSync(dpy, False);
+#endif
 	if (m) {
 		arrangemon(m);
 		restack(m);
@@ -2089,14 +2096,6 @@ showhide(Client *c)
 	if (!c)
 		return;
 	
-#if WINDOWMAP
-	static int grabbed = 0;
-	if (!grabbed) {
-		XGrabServer(dpy);
-		grabbed = 1;
-	}
-#endif
-	
 	if (ISVISIBLE(c)) {
 		/* show clients top down */
 #if !WINDOWMAP
@@ -2115,14 +2114,6 @@ showhide(Client *c)
 		showhide(c->snext);
 		SHOWHIDEPROFILE
 	}
-	
-#if WINDOWMAP
-	if (!c->snext && grabbed) {
-		XUngrabServer(dpy);
-		XSync(dpy, False);
-		grabbed = 0;
-	}
-#endif
 }
 
 void
