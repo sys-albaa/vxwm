@@ -100,12 +100,8 @@ And then add this to keys massive:
 
 Enable/disable (0/1) modules you need/don't need, thats it.
 
-## AFTER ANY CHANGE IN CONFIG/MODULES RECOMPILE VXWM AND RESTART USING RVX
-
 > [!NOTE]
-> If you encounter any bugs - please make an issue!
-> If you want something added - please make an issue!
-> If you want to change something - please make an issue!
+> Aftet any change in config/modules recompile vxwm and restart using rvx.
 
 # Acknowledgements
 
@@ -117,3 +113,10 @@ Also try:
 hevel wayland compositor: https://git.sr.ht/~dlm/hevel
 
 5element: https://hg.sr.ht/~umix11/5element
+
+
+
+> [!NOTE]
+> If you encounter any bugs - **please make an issue!**<br>
+> If you want something added - **please make an issue!**<br>
+> If you want to change something - **please make an issue!**
