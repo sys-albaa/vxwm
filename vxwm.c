@@ -7,7 +7,7 @@ vxwm 2.2 // by wh1tepearl
 */
 
 // Modules configuration is in modules.h
-// Config is in config.h (say wallahi bro)
+// Config is in config.h
 
 #include <errno.h>
 #include <locale.h>
