@@ -1,6 +1,7 @@
 static ExternalBarStrut *ebarstruts = NULL;
 static Atom eb_atom_strut         = None;
 static Atom eb_atom_strut_partial = None;
+static int  eb_scanning           = 0;
 
 void
 externalbars_init_atoms(void)
@@ -23,6 +24,7 @@ externalbars_read(Window w, ExternalBarStrut *out)
     memset(out, 0, sizeof *out);
     out->win = w;
 
+    /* Prefer _NET_WM_STRUT_PARTIAL (12 longs) */
     if (XGetWindowProperty(dpy, w, eb_atom_strut_partial, 0L, 12L, False,
             XA_CARDINAL, &real, &fmt, &n, &extra, &p) == Success && p) {
         if (n >= 4) {
@@ -50,6 +52,7 @@ externalbars_read(Window w, ExternalBarStrut *out)
         p = NULL;
     }
 
+    /* Fallback: plain _NET_WM_STRUT (4 longs) */
     if (XGetWindowProperty(dpy, w, eb_atom_strut, 0L, 4L, False,
             XA_CARDINAL, &real, &fmt, &n, &extra, &p) == Success && p) {
         if (n >= 4) {
@@ -79,6 +82,19 @@ externalbars_hasstrut(Window w)
 }
 
 void
+externalbars_begin_scan(void)
+{
+    eb_scanning = 1;
+}
+
+void
+externalbars_end_scan(void)
+{
+    eb_scanning = 0;
+    externalbars_reapply_all();
+}
+
+void
 externalbars_register(Window w)
 {
     ExternalBarStrut tmp, *sw;
@@ -91,7 +107,8 @@ externalbars_register(Window w)
             ExternalBarStrut *nxt = sw->next;
             *sw = tmp;
             sw->next = nxt;
-            externalbars_reapply_all();
+            if (!eb_scanning)
+                externalbars_reapply_all();
             return;
         }
     }
@@ -100,7 +117,8 @@ externalbars_register(Window w)
     *sw = tmp;
     sw->next = ebarstruts;
     ebarstruts = sw;
-    externalbars_reapply_all();
+    if (!eb_scanning)
+        externalbars_reapply_all();
 }
 
 void
@@ -112,7 +130,8 @@ externalbars_unregister(Window w)
         if (sw->win == w) {
             *prev = sw->next;
             free(sw);
-            externalbars_reapply_all();
+            if (!eb_scanning)
+                externalbars_reapply_all();
             return;
         }
         prev = &sw->next;

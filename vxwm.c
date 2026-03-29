@@ -1797,28 +1797,41 @@ run(void)
 void
 scan(void)
 {
-	unsigned int i, num;
-	Window d1, d2, *wins = NULL;
-	XWindowAttributes wa;
-
-	if (XQueryTree(dpy, root, &d1, &d2, &wins, &num)) {
-		for (i = 0; i < num; i++) {
-			if (!XGetWindowAttributes(dpy, wins[i], &wa)
-			|| wa.override_redirect || XGetTransientForHint(dpy, wins[i], &d1))
-				continue;
-			if (wa.map_state == IsViewable || getstate(wins[i]) == IconicState)
-				manage(wins[i], &wa);
-		}
-		for (i = 0; i < num; i++) { /* now the transients */
-			if (!XGetWindowAttributes(dpy, wins[i], &wa))
-				continue;
-			if (XGetTransientForHint(dpy, wins[i], &d1)
-			&& (wa.map_state == IsViewable || getstate(wins[i]) == IconicState))
-				manage(wins[i], &wa);
-		}
-		if (wins)
-			XFree(wins);
-	}
+    unsigned int i, num;
+    Window d1, d2, *wins = NULL;
+    XWindowAttributes wa;
+ 
+#if EXTERNAL_BARS
+    externalbars_begin_scan();
+#endif
+    if (XQueryTree(dpy, root, &d1, &d2, &wins, &num)) {
+        for (i = 0; i < num; i++) {
+            if (!XGetWindowAttributes(dpy, wins[i], &wa)
+            || wa.override_redirect || XGetTransientForHint(dpy, wins[i], &d1))
+                continue;
+            if (wa.map_state == IsViewable || getstate(wins[i]) == IconicState) {
+#if EXTERNAL_BARS
+                if (externalbars_hasstrut(wins[i])) {
+                    externalbars_register(wins[i]);
+                    continue;
+                }
+#endif
+                manage(wins[i], &wa);
+            }
+        }
+        for (i = 0; i < num; i++) { /* now the transients */
+            if (!XGetWindowAttributes(dpy, wins[i], &wa))
+                continue;
+            if (XGetTransientForHint(dpy, wins[i], &d1)
+            && (wa.map_state == IsViewable || getstate(wins[i]) == IconicState))
+                manage(wins[i], &wa);
+        }
+        if (wins)
+            XFree(wins);
+    }
+#if EXTERNAL_BARS
+    externalbars_end_scan();
+#endif
 }
 
 void

@@ -9,6 +9,8 @@ struct ExternalBarStrut {
     ExternalBarStrut *next;
 };
 
+static void externalbars_begin_scan(void);
+static void externalbars_end_scan(void);
 static int externalbars_hasstrut(Window w);
 static void externalbars_register(Window w);
 static void externalbars_unregister(Window w);
