@@ -67,7 +67,7 @@ static const char *occupiedtags[] = { "1+", "2+", "3+", "4+", "5+", "6+", "7+", 
 /* vxwm will execute this on startup (can be skipped with -ignoreautostart vxwm flag). */
 
 static const char *const autostart[] = {
-	"/home/albaa/.local/bin/statusbar", NULL,
+	"~/.local/bin/statusbar", NULL,
 	NULL /* must end with NULL */
 };
 #endif
