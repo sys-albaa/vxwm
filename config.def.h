@@ -1,5 +1,5 @@
 #pragma once
-
+#include <X11/XF86keysym.h>
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
@@ -12,10 +12,10 @@ static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display 
 static const int showsystray        = 1;        /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const char *fonts[]          = { "monospace:size=10" };
-static const char dmenufont[]       = "monospace:size=10";
+static const char *fonts[]          = { "JetBrainsMono Nerd Font:size=10" };
+static const char dmenufont[]       = "JetBrainsMono Nerd Font:size=10";
 
-static MAYBE_CONST char normbgcolor[]           = "#222222";
+static MAYBE_CONST char normbgcolor[]           = "#000000";
 static MAYBE_CONST char normbordercolor[]       = "#444444";
 static MAYBE_CONST char normfgcolor[]           = "#bbbbbb";
 static MAYBE_CONST char selfgcolor[]            = "#eeeeee";
@@ -67,7 +67,7 @@ static const char *occupiedtags[] = { "1+", "2+", "3+", "4+", "5+", "6+", "7+", 
 /* vxwm will execute this on startup (can be skipped with -ignoreautostart vxwm flag). */
 
 static const char *const autostart[] = {
-	"st",
+	"/home/albaa/.local/bin/statusbar", NULL,
 	NULL /* must end with NULL */
 };
 #endif
@@ -114,12 +114,19 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-fn", dmenufont, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbordercolor, "-sf", selfgcolor, NULL };
 
-static const char *termcmd[]  = { "st", NULL };
+static const char *brupcmd[]    = { "brightnessctl", "set", "5%+", NULL };
+static const char *brdncmd[]    = { "brightnessctl", "set", "5%-", NULL };
+
+static const char *volupcmd[]   = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%+", NULL };
+static const char *voldncmd[]   = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-", NULL };
+static const char *voltogcmd[]  = { "wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle", NULL };
+
+static const char *termcmd[]  = { "kitty", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
-  { MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+  	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
@@ -127,7 +134,6 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
-	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_0,      view,           {0} },
 	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
@@ -189,6 +195,11 @@ static const Key keys[] = {
 	{ ALTERNATE_MODKEY,             XK_Up,     focusdir,       {.i = 2 } }, // up
 	{ ALTERNATE_MODKEY,             XK_Down,   focusdir,       {.i = 3 } }, // down
 #endif
+	{ 0, XF86XK_MonBrightnessUp,    spawn, {.v = brupcmd } },
+	{ 0, XF86XK_MonBrightnessDown,  spawn, {.v = brdncmd } },
+	{ 0, XF86XK_AudioRaiseVolume,   spawn, {.v = volupcmd } },
+	{ 0, XF86XK_AudioLowerVolume,   spawn, {.v = voldncmd } },
+	{ 0, XF86XK_AudioMute,          spawn, {.v = voltogcmd } },
 };
 
 /* button definitions */

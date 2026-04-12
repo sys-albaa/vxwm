@@ -378,7 +378,6 @@ static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
 
 /* configuration, allows nested code to access above variables */
-#include "config.h"
 #include "modules/vxwm_includes.c"
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
@@ -1152,7 +1151,7 @@ getsystraywidth()
 	Client *i;
 	if(showsystray)
 		for(i = systray->icons; i; w += i->w + systrayspacing, i = i->next) ;
-	return w ? w + systrayspacing : 1;
+	return w ? w + systrayspacing : 0;
 }
 
 int
@@ -1448,10 +1447,12 @@ maprequest(XEvent *e)
 	Client *i;
 
 	if ((i = wintosystrayicon(ev->window))) {
-		sendevent(i->win, netatom[Xembed], StructureNotifyMask, CurrentTime, XEMBED_WINDOW_ACTIVATE, 0, systray->win, XEMBED_EMBEDDED_VERSION);
-		resizebarwin(selmon);
-		updatesystray();
-	}
+    sendevent(i->win, netatom[Xembed], StructureNotifyMask,
+              CurrentTime, XEMBED_WINDOW_ACTIVATE, 0, systray->win, XEMBED_EMBEDDED_VERSION);
+    resizebarwin(selmon);
+    updatesystray();
+    return;
+}
 
 	if (!XGetWindowAttributes(dpy, ev->window, &wa) || wa.override_redirect)
 		return;
@@ -1779,7 +1780,7 @@ removesystrayicon(Client *i)
 	if (!showsystray || !i)
 		return;
 	for (ii = &systray->icons; *ii && *ii != i; ii = &(*ii)->next);
-	if (ii)
+	if (*ii)
 		*ii = i->next;
 	free(i);
 }
