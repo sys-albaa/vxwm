@@ -979,7 +979,11 @@ drawbar(Monitor *m)
 
 #endif
 
-	if ((w = m->ww - tw - stw - x) > bh) {
+#if BAR_PADDING
+if ((w = m->ww - tw - stw - x - 2 * sp) > bh) {
+#else
+if ((w = m->ww - tw - stw - x) > bh) {
+#endif
 		if (m->sel) {
 #if !ALT_CENTER_OF_BAR_COLOR
 			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
@@ -1002,7 +1006,11 @@ drawbar(Monitor *m)
 #endif
 		}
 	}
-	drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
+#if BAR_PADDING
+drw_map(drw, m->barwin, 0, 0, m->ww - stw - 2 * sp, bh);
+#else
+drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
+#endif
 }
 
 void
@@ -1795,9 +1803,15 @@ resize(Client *c, int x, int y, int w, int h, int interact)
 void
 resizebarwin(Monitor *m) {
 	unsigned int w = m->ww;
+#if BAR_PADDING
+	if (showsystray && m == systraytomon(m) && !systrayonleft)
+		w -= getsystraywidth();
+	XMoveResizeWindow(dpy, m->barwin, m->wx + sp, m->by + vp, w - 2 * sp, bh);
+#else
 	if (showsystray && m == systraytomon(m) && !systrayonleft)
 		w -= getsystraywidth();
 	XMoveResizeWindow(dpy, m->barwin, m->wx, m->by, w, bh);
+#endif
 }
 
 void
@@ -2859,7 +2873,11 @@ updatesystray(void)
 		/* init systray */
 		if (!(systray = (Systray *)calloc(1, sizeof(Systray))))
 			die("fatal: could not malloc() %u bytes\n", sizeof(Systray));
-		systray->win = XCreateSimpleWindow(dpy, root, x, m->by, w, bh, 0, 0, scheme[SchemeSel][ColBg].pixel);
+		#if BAR_PADDING
+systray->win = XCreateSimpleWindow(dpy, root, x, m->by + vp, w, bh, 0, 0, scheme[SchemeSel][ColBg].pixel);
+#else
+systray->win = XCreateSimpleWindow(dpy, root, x, m->by, w, bh, 0, 0, scheme[SchemeSel][ColBg].pixel);
+#endif
 		wa.event_mask        = ButtonPressMask | ExposureMask;
 		wa.override_redirect = True;
 		wa.background_pixel  = scheme[SchemeNorm][ColBg].pixel;
@@ -2893,17 +2911,22 @@ updatesystray(void)
 			i->mon = m;
 	}
 	w = w ? w + systrayspacing : 1;
-	x -= w;
-	XMoveResizeWindow(dpy, systray->win, x, m->by, w, bh);
-	wc.x = x; wc.y = m->by; wc.width = w; wc.height = bh;
-	wc.stack_mode = Above; wc.sibling = m->barwin;
-	XConfigureWindow(dpy, systray->win, CWX|CWY|CWWidth|CWHeight|CWSibling|CWStackMode, &wc);
-	XMapWindow(dpy, systray->win);
-	XMapSubwindows(dpy, systray->win);
-	/* redraw background */
-	XSetForeground(dpy, drw->gc, scheme[SchemeNorm][ColBg].pixel);
-	XFillRectangle(dpy, systray->win, drw->gc, 0, 0, w, bh);
-	XSync(dpy, False);
+    x -= w;
+#if BAR_PADDING
+XMoveResizeWindow(dpy, systray->win, x, m->by + vp, w, bh);
+wc.x = x; wc.y = m->by + vp; wc.width = w; wc.height = bh;
+#else
+XMoveResizeWindow(dpy, systray->win, x, m->by, w, bh);
+wc.x = x; wc.y = m->by; wc.width = w; wc.height = bh;
+#endif
+wc.stack_mode = Above; wc.sibling = m->barwin;
+XConfigureWindow(dpy, systray->win, CWX|CWY|CWWidth|CWHeight|CWSibling|CWStackMode, &wc);
+XMapWindow(dpy, systray->win);
+XMapSubwindows(dpy, systray->win);
+    /* redraw background */
+XSetForeground(dpy, drw->gc, scheme[SchemeNorm][ColBg].pixel);
+XFillRectangle(dpy, systray->win, drw->gc, 0, 0, w, bh);
+XSync(dpy, False);
 }
 
 void
