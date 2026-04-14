@@ -1,32 +1,44 @@
-# vxwm - my personal build
+# vxwm - Personal fork with systray patch
 
-This is my personal build of [vxwm](https://codeberg.org/wh1tepearl/vxwm), a fork of [dwm](https://dwm.suckless.org/) by [suckless](https://suckless.org/).
+This repository is my personal build of [vxwm](https://codeberg.org/wh1tepearl/vxwm), itself a fork of [dwm](https://dwm.suckless.org/) by [suckless](https://suckless.org/).
 
-A huge thanks to **wh1tepearl** for the incredible work on vxwm — the infinite tags system, the various modules and the overall quality of the codebase made this fork worth building on top of.
+Thanks to **wh1tepearl** for the strong vxwm base, especially the infinite tags system and modular architecture.
 
 ---
 
-## My personal changes
+## What changed in this fork
 
-These are the modifications I made on top of the original vxwm codebase to fit my personal workflow:
+This version includes the following customizations and improvements:
 
-- **Terminal**: changed default terminal from `st` to `kitty`, bound to `Mod+Return`
-- **Bar color**: changed the bar background color to pure black (`#000000`)
-- **Font**: switched from `monospace` to `JetBrains Mono Nerd Font` for both the bar and dmenu
-- **Version string**: removed the vxwm version string from the statusbar
-- **Media keys**: added keybindings for brightness (`XF86MonBrightnessUp/Down`) and audio (`XF86AudioRaiseVolume`, `XF86AudioLowerVolume`, `XF86AudioMute`) using `brightnessctl` and `wpctl`
+- **System tray support**: systray/XEmbed handling is integrated into the bar, including icon geometry and pinning support.
+- **Full English comments in `vxwm.c`**: the main window manager source file is annotated with explanatory comments to make the code easier to read, maintain, and fork.
+- **Custom terminal**: default terminal changed from `st` to `kitty`, bound to `Mod+Return`.
+- **Bar style**: bar background set to pure black (`#000000`).
+- **Font choice**: `JetBrains Mono Nerd Font` is used for the bar and dmenu.
+- **Clean statusbar**: removed the vxwm version string from the default status line.
+- **Media control keys**: added brightness controls with `brightnessctl` and audio controls with `wpctl`.
+
+---
+
+## Key features
+
+- Infinite tags support inherited from vxwm
+- Systray integration with XEmbed protocol
+- Keyboard-driven tiling window management
+- Customizable layouts and tag handling
+- Intentionally documented C source for easier development
 
 ---
 
 ## Dependencies
 
-- libx11
-- libxft
-- libxinerama
-- freetype2
-- brightnessctl (for brightness control)
-- pipewire + wireplumber (for audio control via wpctl)
-- kitty (default terminal)
+- `libx11`
+- `libxft`
+- `libxinerama`
+- `freetype2`
+- `brightnessctl` (brightness hotkeys)
+- `pipewire` + `wireplumber` (audio hotkeys via `wpctl`)
+- `kitty` (default terminal)
 
 ---
 
@@ -38,9 +50,11 @@ cd vxwm
 sudo make clean install
 ```
 
+If you want to customize the configuration, edit `config.def.h` and then rebuild.
+
 ---
 
-## Original project
+## Upstream references
 
 - vxwm by wh1tepearl: https://codeberg.org/wh1tepearl/vxwm
 - dwm by suckless: https://dwm.suckless.org/
