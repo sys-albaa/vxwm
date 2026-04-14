@@ -37,6 +37,12 @@ From this moment, i'll try to comment the code and also make it more readable.
 #include "drw.h"
 #include "util.h"
 
+/*
+ * vxwm.c is the main window manager implementation for vxwm.
+ * It handles X11 setup, event processing, layout management,
+ * window rules, systray handling, and user interaction.
+ */
+
 #if INFINITE_TAGS && !WINDOWMAP
     #undef WINDOWMAP
     #define WINDOWMAP 1
@@ -48,6 +54,10 @@ From this moment, i'll try to comment the code and also make it more readable.
 #endif
 
 /* macros */
+/* Common helper macros used throughout the window manager.
+ * These simplify event masks, window dimensions, tag masks,
+ * and visibility calculations.
+ */
 #define BUTTONMASK              (ButtonPressMask|ButtonReleaseMask)
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define INTERSECT(x,y,w,h,m)    (MAX(0, MIN((x)+(w),(m)->wx+(m)->ww) - MAX((x),(m)->wx)) \
@@ -98,6 +108,9 @@ From this moment, i'll try to comment the code and also make it more readable.
 #endif
 
 /* enums */
+/* Enumerations used for cursors, color schemes, atoms, click targets,
+ * and X11 protocol state management.
+ */
 enum { CurNormal, CurResize, CurMove,
 #if BETTER_RESIZE && BR_CHANGE_CURSOR
        CurNW, CurNE, CurSW, CurSE,  // corner cursors
@@ -119,6 +132,9 @@ enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms *
 enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle,
        ClkClientWin, ClkRootWin, ClkLast }; /* clicks */
 
+/* Argument type used by key bindings and button actions.
+ * It can carry an integer, unsigned integer, float, or pointer value.
+ */
 typedef union {
 	int i;
 	unsigned int ui;
@@ -134,8 +150,13 @@ typedef struct {
 	const Arg arg;
 } Button;
 
+/* Forward declarations for Monitor and Client so that structs can refer to each other. */
 typedef struct Monitor Monitor;
 typedef struct Client Client;
+/* Client structure stores information about a managed window.
+ * It tracks geometry, size hints, window state, tags, and linkage
+ * to the current monitor and client list.
+ */
 struct Client {
 	char name[256];
 	float mina, maxa;
@@ -214,6 +235,9 @@ struct Monitor {
 #endif
 };
 
+/* Rule structure defines automatic rules for new windows.
+ * Rules can match class, instance, title, tags, floating state, and monitor.
+ */
 typedef struct {
 	const char *class;
 	const char *instance;
@@ -230,6 +254,9 @@ struct Systray {
 };
 
 /* function declarations */
+/* Function prototypes for all internal event handlers, helpers,
+ * and window management operations used in vxwm.
+ */
 static void applyrules(Client *c);
 static int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact);
 static void arrange(Monitor *m);
@@ -336,6 +363,9 @@ static void zoom(const Arg *arg);
 #include "config.h"
 
 /* variables */
+/* Global state for the window manager, including display handles,
+ * monitors, selected client, colors, cursors, and atoms.
+ */
 static Systray *systray = NULL;
 static const char broken[] = "broken";
 static char stext[256];
@@ -384,6 +414,9 @@ static Window root, wmcheckwin;
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
 
 /* function implementations */
+/* Apply window rules from config to a newly managed client.
+ * This sets initial tags, floating state, and monitor assignment.
+ */
 void
 applyrules(Client *c)
 {
@@ -420,6 +453,10 @@ applyrules(Client *c)
 	c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : c->mon->tagset[c->mon->seltags];
 }
 
+/* Apply size hints and constraints for a client window.
+ * This enforces minimum/maximum sizes, aspect ratios, increments,
+ * and keeps windows within monitor bounds.
+ */
 int
 applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact)
 {
@@ -488,6 +525,12 @@ applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact)
 	return *x != c->x || *y != c->y || *w != c->w || *h != c->h;
 }
 
+/* Arrange windows on a monitor or all monitors.
+ * This shows/hides clients and triggers the layout algorithm.
+ */
+/* Arrange one monitor or all monitors by showing/hiding clients
+ * and then applying the current layout to each monitor.
+ */
 void
 arrange(Monitor *m)
 {
@@ -509,6 +552,9 @@ arrange(Monitor *m)
 		arrangemon(m);
 }
 
+/* Run the layout function for a specific monitor.
+ * This updates the layout symbol and calls the arrange callback.
+ */
 void
 arrangemon(Monitor *m)
 {
@@ -518,6 +564,8 @@ arrangemon(Monitor *m)
 		m->lt[m->sellt]->arrange(m);
 }
 
+/* Attach a client to the head of the monitor's client list. */
+/* Insert client at the beginning of the monitor's client list. */
 void
 attach(Client *c)
 {
@@ -525,6 +573,12 @@ attach(Client *c)
 	c->mon->clients = c;
 }
 
+/* Attach a client to the head of the stacked client list.
+ * The stack is used for focus order and stacking operations.
+ */
+/* Insert client at the beginning of the stacked client list.
+ * This list defines focus traversal and stacking order.
+ */
 void
 attachstack(Client *c)
 {
@@ -532,6 +586,13 @@ attachstack(Client *c)
 	c->mon->stack = c;
 }
 
+/* Handle mouse button presses on the root window, status bar,
+ * tag bar, and client windows.
+ */
+/* Handle pointer button events from the bar, tags, status text,
+ * and client windows. This determines click targets and executes
+ * configured button actions.
+ */
 void
 buttonpress(XEvent *e)
 {
@@ -589,6 +650,12 @@ buttonpress(XEvent *e)
 			buttons[i].func(click == ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
 }
 
+/* Check whether another window manager is already running.
+ * If a different WM has grabbed the root window, vxwm exits.
+ */
+/* Detect whether another window manager has already grabbed
+ * the root window. If so, vxwm aborts startup.
+ */
 void
 checkotherwm(void)
 {
@@ -600,6 +667,12 @@ checkotherwm(void)
 	XSync(dpy, False);
 }
 
+/* Cleanup all resources before exiting vxwm.
+ * This removes windows, frees memory, and restores input focus.
+ */
+/* Clean up all resources before exit: unmanage windows, destroy bars,
+ * free memory and restore the input focus to the X server.
+ */
 void
 cleanup(void)
 {
@@ -635,6 +708,10 @@ cleanup(void)
 	XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
 }
 
+/* Cleanup a single monitor, remove its bar, and free its state. */
+/* Remove and free a monitor object when it is no longer needed.
+ * This also destroys the monitor's bar window.
+ */
 void
 cleanupmon(Monitor *mon)
 {
@@ -655,6 +732,12 @@ cleanupmon(Monitor *mon)
 
 }
 
+/* Handle client messages sent by windows or the X server.
+ * This includes fullscreen state and active window urgency notifications.
+ */
+/* Handle ClientMessage events from X11 windows.
+ * This covers fullscreen requests, active window hints, and systray docking.
+ */
 void
 clientmessage(XEvent *e)
 {
@@ -718,6 +801,12 @@ clientmessage(XEvent *e)
 	}
 }
 
+/* Send a synthetic ConfigureNotify event to a client.
+ * This keeps client window state in sync with X11.
+ */
+/* Send a synthetic ConfigureNotify event to the managed client.
+ * This keeps the window's window manager hints synchronized.
+ */
 void
 configure(Client *c)
 {
@@ -737,6 +826,9 @@ configure(Client *c)
 	XSendEvent(dpy, c->win, False, StructureNotifyMask, (XEvent *)&ce);
 }
 
+/* Respond to ConfigureNotify events from the root window.
+ * This updates monitor geometry and adjusts bars and fullscreen clients.
+ */
 void
 configurenotify(XEvent *e)
 {
@@ -769,6 +861,10 @@ configurenotify(XEvent *e)
 	}
 }
 
+/* Handle requests from windows to change their configuration.
+ * For managed clients, this may update floating geometry or pass
+ * unhandled requests through to XConfigureWindow.
+ */
 void
 configurerequest(XEvent *e)
 {
@@ -821,6 +917,9 @@ configurerequest(XEvent *e)
 	XSync(dpy, False);
 }
 
+/* Create a new monitor structure with default layout and tag state.
+ * This is called during startup and when monitor geometry changes.
+ */
 Monitor *
 createmon(void)
 {
@@ -849,6 +948,9 @@ createmon(void)
 	return m;
 }
 
+/* Handle DestroyNotify events for managed windows and systray icons.
+ * When a client is destroyed, it is removed from management.
+ */
 void
 destroynotify(XEvent *e)
 {
@@ -867,6 +969,7 @@ destroynotify(XEvent *e)
 #endif
 }
 
+/* Remove a client from the monitor's client list. */
 void
 detach(Client *c)
 {
@@ -876,6 +979,9 @@ detach(Client *c)
 	*tc = c->next;
 }
 
+/* Remove a client from the stacked focus list.
+ * If the removed client was selected, select the next visible client.
+ */
 void
 detachstack(Client *c)
 {
@@ -890,6 +996,9 @@ detachstack(Client *c)
 	}
 }
 
+/* Return the monitor in the given direction relative to the selected monitor.
+ * This is used for monitor switching and moving clients between screens.
+ */
 Monitor *
 dirtomon(int dir)
 {
@@ -905,6 +1014,9 @@ dirtomon(int dir)
 	return m;
 }
 
+/* Draw the status bar for a single monitor.
+ * This includes tags, layout symbol, window title, and status text.
+ */
 void
 drawbar(Monitor *m)
 {
@@ -1013,6 +1125,7 @@ drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 #endif
 }
 
+/* Redraw the bars for all monitors. */
 void
 drawbars(void)
 {
@@ -1022,6 +1135,9 @@ drawbars(void)
 		drawbar(m);
 }
 
+/* Handle EnterNotify events to switch focus when the pointer
+ * enters a new window or monitor.
+ */
 void
 enternotify(XEvent *e)
 {
@@ -1041,6 +1157,8 @@ enternotify(XEvent *e)
 	focus(c);
 }
 
+/* Handle expose events for bar windows and redraw when needed.
+ */
 void
 expose(XEvent *e)
 {
@@ -1054,6 +1172,9 @@ expose(XEvent *e)
 	}
 }
 
+/* Change keyboard focus to the given client.
+ * This updates window borders, focus order, and input focus.
+ */
 void
 focus(Client *c)
 {
@@ -1080,6 +1201,9 @@ focus(Client *c)
 }
 
 /* there are some broken focus acquiring clients needing extra handling */
+/* Handle focus-in events for clients that need extra focus handling.
+ * This avoids losing focus on some broken X11 clients.
+ */
 void
 focusin(XEvent *e)
 {
@@ -1089,6 +1213,7 @@ focusin(XEvent *e)
 		setfocus(selmon->sel);
 }
 
+/* Move focus to the next monitor in the specified direction. */
 void
 focusmon(const Arg *arg)
 {
@@ -1103,6 +1228,9 @@ focusmon(const Arg *arg)
 	focus(NULL);
 }
 
+/* Move focus through the tiled client stack.
+ * Positive arg->i goes forward, negative goes backward.
+ */
 void
 focusstack(const Arg *arg)
 {
@@ -1135,6 +1263,7 @@ focusstack(const Arg *arg)
 	}
 }
 
+/* Read an Atom property from a client window. */
 Atom
 getatomprop(Client *c, Atom prop)
 {
@@ -1152,6 +1281,9 @@ getatomprop(Client *c, Atom prop)
 	return atom;
 }
 
+/* Calculate the total width of the system tray area.
+ * This includes icon width and spacing.
+ */
 unsigned int
 getsystraywidth()
 {
@@ -1172,6 +1304,7 @@ getrootptr(int *x, int *y)
 	return XQueryPointer(dpy, root, &dummy, &dummy, x, y, &di, &di, &dui);
 }
 
+/* Query a window's WM_STATE property. */
 long
 getstate(Window w)
 {
@@ -1190,6 +1323,9 @@ getstate(Window w)
 	return result;
 }
 
+/* Retrieve a text property from a window and normalize it to UTF-8.
+ * Returns 1 on success and 0 on failure.
+ */
 int
 gettextprop(Window w, Atom atom, char *text, unsigned int size)
 {
@@ -1213,6 +1349,9 @@ gettextprop(Window w, Atom atom, char *text, unsigned int size)
 	return 1;
 }
 
+/* Grab the configured mouse buttons for a client window.
+ * This allows mouse actions to be routed to vxwm.
+ */
 void
 grabbuttons(Client *c, int focused)
 {
@@ -1234,6 +1373,9 @@ grabbuttons(Client *c, int focused)
 	}
 }
 
+/* Grab all configured key combinations on the root window.
+ * Num lock and caps lock modifiers are handled automatically.
+ */
 void
 grabkeys(void)
 {
@@ -1314,6 +1456,7 @@ isuniquegeom(XineramaScreenInfo *unique, size_t n, XineramaScreenInfo *info)
 }
 #endif /* XINERAMA */
 
+/* Handle key press events and dispatch them to configured key bindings. */
 void
 keypress(XEvent *e)
 {
@@ -1330,6 +1473,9 @@ keypress(XEvent *e)
 			keys[i].func(&(keys[i].arg));
 }
 
+/* Kill the currently selected client window.
+ * Attempts WM_DELETE_WINDOW first, then forces the client to close.
+ */
 void
 killclient(const Arg *arg)
 {
@@ -1347,6 +1493,9 @@ killclient(const Arg *arg)
 	}
 }
 
+/* Manage a new window: create a Client object, apply rules,
+ * set up event handling, and add it to monitor lists.
+ */
 void
 manage(Window w, XWindowAttributes *wa)
 {
@@ -1447,6 +1596,9 @@ mappingnotify(XEvent *e)
 		grabkeys();
 }
 
+/* Handle MapRequest events for new windows and systray icons.
+ * Maps windows that are not override-redirect and not already managed.
+ */
 void
 maprequest(XEvent *e)
 {
@@ -1476,6 +1628,7 @@ maprequest(XEvent *e)
 		manage(ev->window, &wa);
 }
 
+/* Monocle layout: make each visible client fullscreen in the monitor area. */
 void
 monocle(Monitor *m)
 {
@@ -1491,6 +1644,9 @@ monocle(Monitor *m)
 		resize(c, m->wx, m->wy, m->ww - 2 * c->bw, m->wh - 2 * c->bw, 0);
 }
 
+/* Track pointer motion on the root window and switch focus to
+ * the monitor under the cursor.
+ */
 void
 motionnotify(XEvent *e)
 {
@@ -1508,6 +1664,9 @@ motionnotify(XEvent *e)
 	mon = m;
 }
 
+/* Handle mouse-based moving of the selected window.
+ * The window is moved with pointer motion and snapped to monitor edges.
+ */
 void
 movemouse(const Arg *arg)
 {
@@ -1685,6 +1844,9 @@ movemouse(const Arg *arg)
 #endif
 }
 
+/* Return the next tiled client starting from c.
+ * Floating or invisible clients are skipped.
+ */
 Client *
 nexttiled(Client *c)
 {
@@ -1692,6 +1854,7 @@ nexttiled(Client *c)
 	return c;
 }
 
+/* Promote a client to the front of the client list and focus it. */
 void
 pop(Client *c)
 {
@@ -1701,6 +1864,9 @@ pop(Client *c)
 	arrange(c->mon);
 }
 
+/* Handle property change notifications on clients and the root window.
+ * This includes title updates, window hints, and systray icon state.
+ */
 void
 propertynotify(XEvent *e)
 {
@@ -1760,12 +1926,16 @@ propertynotify(XEvent *e)
 	}
 }
 
+/* Stop the main event loop and begin shutdown. */
 void
 quit(const Arg *arg)
 {
 	running = 0;
 }
 
+/* Find the monitor that intersects most with the rectangle.
+ * Used when moving windows between screens.
+ */
 Monitor *
 recttomon(int x, int y, int w, int h)
 {
@@ -1780,6 +1950,7 @@ recttomon(int x, int y, int w, int h)
 	return r;
 }
 
+/* Remove an icon from the system tray list and free its client data. */
 void
 removesystrayicon(Client *i)
 {
@@ -1793,6 +1964,7 @@ removesystrayicon(Client *i)
 	free(i);
 }
 
+/* Resize a client after applying size hints and constraints. */
 void
 resize(Client *c, int x, int y, int w, int h, int interact)
 {
@@ -1800,6 +1972,9 @@ resize(Client *c, int x, int y, int w, int h, int interact)
 		resizeclient(c, x, y, w, h);
 }
 
+/* Update the bar window geometry for a monitor.
+ * This accounts for systray width and optional padding.
+ */
 void
 resizebarwin(Monitor *m) {
 	unsigned int w = m->ww;
@@ -1814,6 +1989,9 @@ resizebarwin(Monitor *m) {
 #endif
 }
 
+/* Directly move and resize a client window in X11.
+ * This is used after the final size has been determined.
+ */
 void
 resizeclient(Client *c, int x, int y, int w, int h)
 {
@@ -1829,6 +2007,7 @@ resizeclient(Client *c, int x, int y, int w, int h)
 	XSync(dpy, False);
 }
 
+/* Handle resize request events from systray icons. */
 void
 resizerequest(XEvent *e)
 {
@@ -1843,6 +2022,9 @@ resizerequest(XEvent *e)
 }
 
 #if !BETTER_RESIZE
+/* Resize the selected window with the mouse.
+ * The window grows or shrinks while the pointer moves.
+ */
 void
 resizemouse(const Arg *arg)
 {
@@ -1923,6 +2105,10 @@ resizemouse(const Arg *arg)
 
 
 
+/* Restack client windows for a monitor.
+ * The selected client is raised and tiled clients are stacked
+ * in the correct order below the bar.
+ */
 void
 restack(Monitor *m)
 {
@@ -1963,6 +2149,7 @@ restack(Monitor *m)
 	while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
 }
 
+/* Main event loop: wait for X events and dispatch handlers. */
 void
 run(void)
 {
@@ -1974,6 +2161,9 @@ run(void)
 			handler[ev.type](&ev); /* call handler */
 }
 
+/* Scan existing child windows on the root window at startup.
+ * Any mapped windows are managed by vxwm.
+ */
 void
 scan(void)
 {
@@ -2014,6 +2204,9 @@ scan(void)
 #endif
 }
 
+/* Move a client from its current monitor to another monitor.
+ * The client is reattached and the layouts are refreshed.
+ */
 void
 sendmon(Client *c, Monitor *m)
 {
@@ -2035,6 +2228,9 @@ sendmon(Client *c, Monitor *m)
 	arrange(NULL);
 }
 
+/* Change the WM_STATE property of a client window.
+ * This is used for normal, withdrawn, and iconic states.
+ */
 void
 setclientstate(Client *c, long state)
 {
@@ -2044,6 +2240,9 @@ setclientstate(Client *c, long state)
 		PropModeReplace, (unsigned char *)data, 2);
 }
 
+/* Send a ClientMessage event to a window if the protocol is supported.
+ * Used for WM_DELETE_WINDOW, WM_TAKE_FOCUS and XEmbed messages.
+ */
 int
 sendevent(Window w, Atom proto, int mask, long d0, long d1, long d2, long d3, long d4)
 {
@@ -2080,6 +2279,9 @@ sendevent(Window w, Atom proto, int mask, long d0, long d1, long d2, long d3, lo
 	return exists;
 }
 
+/* Set keyboard focus to the given client and update _NET_ACTIVE_WINDOW.
+ * If the client forbids focus, only the active window property is updated.
+ */
 void
 setfocus(Client *c)
 {
@@ -2090,6 +2292,9 @@ setfocus(Client *c)
 	sendevent(c->win, wmatom[WMTakeFocus], NoEventMask, wmatom[WMTakeFocus], CurrentTime, 0, 0, 0);
 }
 
+/* Toggle fullscreen state for a client window.
+ * This changes window state, floating behavior, borders, and geometry.
+ */
 void
 setfullscreen(Client *c, int fullscreen)
 {
@@ -2118,6 +2323,9 @@ setfullscreen(Client *c, int fullscreen)
 	}
 }
 
+/* Switch the current layout on the selected monitor.
+ * If arg->v is NULL, toggle between the two configured layouts.
+ */
 void
 setlayout(const Arg *arg)
 {
@@ -2156,6 +2364,9 @@ setlayout(const Arg *arg)
     arrange(selmon);
 }
 /* arg > 1.0 will set mfact absolutely */
+/* Adjust the master area factor for tiling layouts.
+ * Arguments less than 1.0 are relative changes, greater than 1.0 set an absolute value.
+ */
 void
 setmfact(const Arg *arg)
 {
@@ -2170,6 +2381,9 @@ setmfact(const Arg *arg)
 	arrange(selmon);
 }
 
+/* Perform initial X11 and window manager setup.
+ * This initializes the display, fonts, cursors, bars, atoms, and key grabs.
+ */
 void
 setup(void)
 {
@@ -2290,6 +2504,9 @@ setup(void)
 	focus(NULL);
 }
 
+/* Mark a client as urgent or clear its urgency hint.
+ * This updates the WM_HINTS so taskbars and pagers can show it.
+ */
 void
 seturgent(Client *c, int urg)
 {
@@ -2303,6 +2520,9 @@ seturgent(Client *c, int urg)
 	XFree(wmh);
 }
 
+/* Recursively show or hide clients based on visibility.
+ * Visible windows are moved into place, hidden windows are moved off-screen.
+ */
 void
 showhide(Client *c)
 {
@@ -2329,6 +2549,9 @@ showhide(Client *c)
 	}
 }
 
+/* Fork and execute an external command for a key binding.
+ * The child process closes the X connection and runs execvp.
+ */
 void
 spawn(const Arg *arg)
 {
@@ -2351,6 +2574,7 @@ spawn(const Arg *arg)
 	}
 }
 
+/* Apply a tag to the currently selected client. */
 void
 tag(const Arg *arg)
 {
@@ -2383,6 +2607,7 @@ tag(const Arg *arg)
     }
 }
 
+/* Move the selected client to a different monitor. */
 void
 tagmon(const Arg *arg)
 {
@@ -2391,6 +2616,9 @@ tagmon(const Arg *arg)
 	sendmon(selmon->sel, dirtomon(arg->i));
 }
 
+/* Tile layout: arrange clients in a master area and stack area.
+ * This layout is the default tiling mode for vxwm.
+ */
 void
 tile(Monitor *m)
 {
@@ -2436,6 +2664,7 @@ tile(Monitor *m)
 		}
 }
 
+/* Toggle the visibility of the selected monitor's status bar. */
 void
 togglebar(const Arg *arg)
 {
@@ -2463,6 +2692,9 @@ togglebar(const Arg *arg)
     arrange(selmon);
 }
 
+/* Toggle whether the selected client is floating.
+ * Floating windows are exempt from tiled layout placement.
+ */
 void
 togglefloating(const Arg *arg)
 {
@@ -2477,6 +2709,9 @@ togglefloating(const Arg *arg)
 	arrange(selmon);
 }
 
+/* Toggle the selected client's assignment to a tag.
+ * The client may be visible on multiple tags after this operation.
+ */
 void
 toggletag(const Arg *arg)
 {
@@ -2498,6 +2733,9 @@ toggletag(const Arg *arg)
 #endif
 }
 
+/* Toggle the visibility of a tag on the selected monitor.
+ * This allows viewing multiple tags at once if the config supports it.
+ */
 void
 toggleview(const Arg *arg)
 {
@@ -2513,6 +2751,7 @@ toggleview(const Arg *arg)
 #endif
 }
 
+/* Remove focus from a client and optionally reset input focus to root. */
 void
 unfocus(Client *c, int setfocus)
 {
@@ -2526,6 +2765,9 @@ unfocus(Client *c, int setfocus)
 	}
 }
 
+/* Stop managing a client and remove it from all internal lists.
+ * If the client is not already destroyed, restore its state first.
+ */
 void
 unmanage(Client *c, int destroyed)
 {
@@ -2556,6 +2798,9 @@ unmanage(Client *c, int destroyed)
 #endif
 }
 
+/* Handle UnmapNotify events, which occur when a window is hidden.
+ * This may unmanage the client or remap systray icons if needed.
+ */
 void
 unmapnotify(XEvent *e)
 {
@@ -2579,6 +2824,9 @@ unmapnotify(XEvent *e)
 #endif
 }
 
+/* Create and map bar windows for all monitors.
+ * Bar windows are reused if already created.
+ */
 void
 updatebars(void)
 {
@@ -2610,6 +2858,9 @@ updatebars(void)
 	}
 }
 
+/* Recalculate bar and window area positions for a monitor.
+ * This is needed when bar visibility or geometry changes.
+ */
 void
 updatebarpos(Monitor *m)
 {
@@ -2641,6 +2892,9 @@ updatebarpos(Monitor *m)
  #endif
 }
 
+/* Update the root window property that lists all managed clients.
+ * This is used by pagers and taskbars that support EWMH.
+ */
 void
 updateclientlist(void)
 {
@@ -2655,6 +2909,9 @@ updateclientlist(void)
 				(unsigned char *) &(c->win), 1);
 }
 
+/* Refresh monitor geometry and handle monitor changes.
+ * If monitor layout changes, existing clients may be moved.
+ */
 int
 updategeom(void)
 {
@@ -2733,6 +2990,9 @@ updategeom(void)
 	return dirty;
 }
 
+/* Determine the modifier mask for Num Lock.
+ * This avoids missing key bindings when Num Lock is active.
+ */
 void
 updatenumlockmask(void)
 {
@@ -2749,6 +3009,9 @@ updatenumlockmask(void)
 	XFreeModifiermap(modmap);
 }
 
+/* Read and cache size hints from a client window.
+ * This includes minimum size, resize increments, and aspect ratios.
+ */
 void
 updatesizehints(Client *c)
 {
@@ -2793,6 +3056,7 @@ updatesizehints(Client *c)
 	c->hintsvalid = 1;
 }
 
+/* Update the status text from the root window and redraw the bar. */
 void
 updatestatus(void)
 {
@@ -2803,6 +3067,9 @@ updatestatus(void)
 }
 
 
+/* Adjust systray icon geometry to fit the bar height.
+ * This preserves aspect ratio for tray icons.
+ */
 void
 updatesystrayicongeom(Client *i, int w, int h)
 {
@@ -2826,6 +3093,9 @@ updatesystrayicongeom(Client *i, int w, int h)
 	}
 }
 
+/* Handle property changes for XEmbed systray icons.
+ * This manages mapping/unmapping and _XEMBED_INFO state updates.
+ */
 void
 updatesystrayiconstate(Client *i, XPropertyEvent *ev)
 {
@@ -2854,6 +3124,7 @@ updatesystrayiconstate(Client *i, XPropertyEvent *ev)
 			systray->win, XEMBED_EMBEDDED_VERSION);
 }
 
+/* Rebuild the system tray window and reposition all tray icons. */
 void
 updatesystray(void)
 {
@@ -2929,6 +3200,7 @@ XFillRectangle(dpy, systray->win, drw->gc, 0, 0, w, bh);
 XSync(dpy, False);
 }
 
+/* Update the title string for a client from WM_NAME or _NET_WM_NAME. */
 void
 updatetitle(Client *c)
 {
@@ -2938,6 +3210,9 @@ updatetitle(Client *c)
 		strcpy(c->name, broken);
 }
 
+/* Update client state based on window type hints.
+ * Dialogs become floating, and fullscreen is applied as needed.
+ */
 void
 updatewindowtype(Client *c)
 {
@@ -2950,6 +3225,7 @@ updatewindowtype(Client *c)
 		c->isfloating = 1;
 }
 
+/* Update urgency and input hint state from WM_HINTS. */
 void
 updatewmhints(Client *c)
 {
@@ -3052,6 +3328,9 @@ view(const Arg *arg)
 
 #endif
 
+/* Find the Client corresponding to an X window, if any.
+ * This searches all monitors and client lists.
+ */
 Client *
 wintoclient(Window w)
 {
@@ -3065,6 +3344,7 @@ wintoclient(Window w)
 	return NULL;
 }
 
+/* Find a system tray icon client by its X window. */
 Client *
 wintosystrayicon(Window w) {
 	Client *i = NULL;
@@ -3075,6 +3355,7 @@ wintosystrayicon(Window w) {
 	return i;
 }
 
+/* Return the monitor that contains a given window or point. */
 Monitor *
 wintomon(Window w)
 {
@@ -3095,6 +3376,9 @@ wintomon(Window w)
 /* There's no way to check accesses to destroyed windows, thus those cases are
  * ignored (especially on UnmapNotify's). Other types of errors call Xlibs
  * default error handler, which may call exit. */
+/* Generic X error handler used during normal operation.
+ * Many bad-window errors are ignored because they are expected.
+ */
 int
 xerror(Display *dpy, XErrorEvent *ee)
 {
@@ -3113,6 +3397,9 @@ xerror(Display *dpy, XErrorEvent *ee)
 	return xerrorxlib(dpy, ee); /* may call exit */
 }
 
+/* Dummy X error handler that ignores any errors.
+ * Used when XGrabServer is active to avoid reporting expected failures.
+ */
 int
 xerrordummy(Display *dpy, XErrorEvent *ee)
 {
@@ -3128,6 +3415,9 @@ xerrorstart(Display *dpy, XErrorEvent *ee)
 	return -1;
 }
 
+/* Determine which monitor owns the system tray.
+ * This supports systray pinning and multi-monitor setups.
+ */
 Monitor *
 systraytomon(Monitor *m) {
 	Monitor *t;
@@ -3144,6 +3434,7 @@ systraytomon(Monitor *m) {
 	return t;
 }
 
+/* Promote a client to the master position in the tiling layout. */
 void
 zoom(const Arg *arg)
 {
@@ -3162,6 +3453,9 @@ zoom(const Arg *arg)
 #endif
 }
 
+/* Program entry point for vxwm. Parses arguments, initializes X,
+ * starts the event loop, and cleans up on exit.
+ */
 int
 main(int argc, char *argv[])
 {
