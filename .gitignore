@@ -1,5 +1,6 @@
 *.o
 config.h
 modules.h
+.vscode
 vxwm
 *.tar.gz
