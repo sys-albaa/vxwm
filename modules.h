@@ -4,6 +4,7 @@
 
 /* KILLER FEATURES */
 #define INFINITE_TAGS 1
+#define SYSTRAY 1
 /* 
 Most tiling window managers (like the default dwm) treat your screen like a slide-projector. You click a button, and the current "slide" is swapped for another. If an window is off-screen, it doesn't exist.
 
