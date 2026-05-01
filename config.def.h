@@ -15,12 +15,12 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 static const char *fonts[]          = { "JetBrainsMono Nerd Font:size=10" };
 static const char dmenufont[]       = "JetBrainsMono Nerd Font:size=10";
 
-static MAYBE_CONST char normbgcolor[]           = "#000000";
-static MAYBE_CONST char normbordercolor[]       = "#444444";
-static MAYBE_CONST char normfgcolor[]           = "#bbbbbb";
-static MAYBE_CONST char selfgcolor[]            = "#eeeeee";
-static MAYBE_CONST char selbordercolor[]        = "#005577";
-static MAYBE_CONST char selbgcolor[]            = "#005577";
+static MAYBE_CONST char normbgcolor[]           = "#97EBED";
+static MAYBE_CONST char normbordercolor[]       = "#77598D";
+static MAYBE_CONST char normfgcolor[]           = "#77598D";
+static MAYBE_CONST char selfgcolor[]            = "#1a1a2e";
+static MAYBE_CONST char selbordercolor[]        = "#F5D3B8";
+static MAYBE_CONST char selbgcolor[]            = "#E2B7C0";
 static MAYBE_CONST char *colors[][3] = {
        /*               fg           bg           border   */
        [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
