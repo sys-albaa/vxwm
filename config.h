@@ -121,9 +121,9 @@ static const char *volupcmd[]   = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@
 static const char *voldncmd[]   = { "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-", NULL };
 static const char *voltogcmd[]  = { "wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle", NULL };
 
-static const char *termcmd[]  = { "kitty", NULL };
+static const char *termcmd[]  = { "st", NULL };
 
-static const char *browsercmd[]  = { "firefox", NULL };
+static const char *browsercmd[]  = { "librewolf", NULL };
 static const char *roficmd[] = { "rofi", "-show", "drun", NULL };
 
 static const Key keys[] = {
