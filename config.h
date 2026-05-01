@@ -11,16 +11,16 @@ static const unsigned int systrayspacing = 2;   /* systray spacing */
 static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
 static const int showsystray        = 1;        /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
-static const int topbar             = 1;        /* 0 means bottom bar */
+static const int topbar             = 0;        /* 0 means bottom bar */
 static const char *fonts[]          = { "JetBrainsMono Nerd Font:size=10" };
 static const char dmenufont[]       = "JetBrainsMono Nerd Font:size=10";
 
-static MAYBE_CONST char normbgcolor[]           = "#000000";
-static MAYBE_CONST char normbordercolor[]       = "#444444";
-static MAYBE_CONST char normfgcolor[]           = "#bbbbbb";
-static MAYBE_CONST char selfgcolor[]            = "#eeeeee";
-static MAYBE_CONST char selbordercolor[]        = "#8f0a00";
-static MAYBE_CONST char selbgcolor[]            = "#8f0a00";
+static MAYBE_CONST char normbgcolor[]           = "#fafafa";
+static MAYBE_CONST char normbordercolor[]       = "#0e0e0e";
+static MAYBE_CONST char normfgcolor[]           = "#0e0e0e";
+static MAYBE_CONST char selfgcolor[]            = "#fafafa";
+static MAYBE_CONST char selbordercolor[]        = "#fafafa";
+static MAYBE_CONST char selbgcolor[]            = "#000000";
 static MAYBE_CONST char *colors[][3] = {
        /*               fg           bg           border   */
        [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
@@ -40,14 +40,14 @@ static const int user_bh = 0;
 
 #if BAR_PADDING
 static const int vertpad = 5;       /* vertical padding of bar */
-static const int sidepad = 5;       /* horizontal padding of bar */
+static const int sidepad = 65;       /* horizontal padding of bar */
 #endif
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char *tags[] = { "α", "β", "γ", "δ", "ε" };
 
 #if OCCUPIED_TAGS_DECORATION
-static const char *occupiedtags[] = { "1+", "2+", "3+", "4+", "5+", "6+", "7+", "8+", "9+" };
+static const char *occupiedtags[] = { "α+", "β+", "γ+", "δ+", "ε+", "ζ+", "η+", "θ+", "ι+" };
 #endif
 
 #if INFINITE_TAGS
@@ -88,7 +88,7 @@ static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 #if LOCK_MOVE_RESIZE_REFRESH_RATE
-static const int refreshrate = 360;  /* refresh rate (per second) for client move/resize, set it to your monitor refresh rate or double of that*/
+static const int refreshrate = 120;  /* refresh rate (per second) for client move/resize, set it to your monitor refresh rate or double of that*/
 #endif //LOCK_MOVE_RESIZE_REFRESH_RATE
 static const Layout layouts[] = {
 	/* symbol     arrange function */
@@ -123,9 +123,13 @@ static const char *voltogcmd[]  = { "wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@",
 
 static const char *termcmd[]  = { "kitty", NULL };
 
+static const char *browsercmd[]  = { "firefox", NULL };
+static const char *roficmd[] = { "rofi", "-show", "drun", NULL };
+
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
+	{ MODKEY,                       XK_p,      spawn,          {.v = roficmd } },
+	{ MODKEY,                       XK_w,      spawn,          {.v = browsercmd } },
   	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
@@ -197,9 +201,14 @@ static const Key keys[] = {
 #endif
 	{ 0, XF86XK_MonBrightnessUp,    spawn, {.v = brupcmd } },
 	{ 0, XF86XK_MonBrightnessDown,  spawn, {.v = brdncmd } },
+
 	{ 0, XF86XK_AudioRaiseVolume,   spawn, {.v = volupcmd } },
 	{ 0, XF86XK_AudioLowerVolume,   spawn, {.v = voldncmd } },
 	{ 0, XF86XK_AudioMute,          spawn, {.v = voltogcmd } },
+
+	{ 0, XF86XK_AudioPlay, spawn, SHCMD("playerctl play-pause") },
+	{ 0, XF86XK_AudioNext, spawn, SHCMD("playerctl next") },
+	{ 0, XF86XK_AudioPrev, spawn, SHCMD("playerctl previous") },
 };
 
 /* button definitions */

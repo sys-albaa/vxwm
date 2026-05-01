@@ -2,7 +2,7 @@
 This wm is forked from dwm 6.7 (but keeps up with all dwm's updates), thanks suckless for their incredible work on dwm!
 Infinite tags module is heavily inspired from 5element which is inspired from the hevel wayland compositor.
 
-vxwm 2.2 // by wh1tepearl
+vvxwm 2.2 // by wh1tepearl
 
 I just realised that i haven't commenting the entire code, sure i can perfectly read it but for the people that want to fork vxwm/make something with vxwm's code it is a pain in the ass.
 From this moment, i'll try to comment the code and also make it more readable.
@@ -1028,17 +1028,24 @@ drawbar(Monitor *m)
   const char *tagtext;	
 #endif
   Client *c;
-	if (!m->showbar)
-		return;
+  if (!m->showbar)
+  return;
 
-	if (showsystray && m == systraytomon(m) && !systrayonleft)
-		stw = getsystraywidth();
+drw_setscheme(drw, scheme[SchemeNorm]);
+drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
+
+if (showsystray && m == systraytomon(m) && !systrayonleft)
+  stw = getsystraywidth();
 
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		tw = TEXTW(stext) - lrpad / 2 + 2; /* 2px extra right padding */
+#if BAR_PADDING
+		drw_text(drw, m->ww - tw - stw - 2 * sp, 0, tw, bh, lrpad / 2 - 2, stext, 0);
+#else
 		drw_text(drw, m->ww - tw - stw, 0, tw, bh, lrpad / 2 - 2, stext, 0);
+#endif
 	}
 
 	resizebarwin(m);
@@ -1100,28 +1107,28 @@ if ((w = m->ww - tw - stw - x) > bh) {
 #if !ALT_CENTER_OF_BAR_COLOR
 			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
 #else
-      drw_setscheme(drw, scheme[m == selmon ? SchemeNorm : SchemeNorm]);
+			drw_setscheme(drw, scheme[m == selmon ? SchemeNorm : SchemeNorm]);
 #endif
 #if !BAR_PADDING
 			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
 #else
-      drw_text(drw, x, 0, w - 2 * sp, bh, lrpad / 2, m->sel->name, 0);
+			drw_text(drw, x, 0, w - 2 * sp, bh, lrpad / 2, m->sel->name, 0);
 #endif
 			if (m->sel->isfloating)
 				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
 		} else {
 			drw_setscheme(drw, scheme[SchemeNorm]);
-#if !BAR_PADDING
+	#if !BAR_PADDING
 			drw_rect(drw, x, 0, w, bh, 1, 1);
-#else
-      drw_rect(drw, x, 0, w - 2 * sp, bh, 1, 1);
-#endif
+	#else
+			drw_rect(drw, x, 0, w - 2 * sp, bh, 1, 1);
+	#endif
 		}
 	}
 #if BAR_PADDING
-drw_map(drw, m->barwin, 0, 0, m->ww - stw - 2 * sp, bh);
+	drw_map(drw, m->barwin, 0, 0, m->ww - stw - 2 * sp, bh);
 #else
-drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
+	drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 #endif
 }
 
@@ -3197,6 +3204,7 @@ XMapSubwindows(dpy, systray->win);
     /* redraw background */
 XSetForeground(dpy, drw->gc, scheme[SchemeNorm][ColBg].pixel);
 XFillRectangle(dpy, systray->win, drw->gc, 0, 0, w, bh);
+drawbar(selmon);
 XSync(dpy, False);
 }
 
