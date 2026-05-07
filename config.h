@@ -123,7 +123,7 @@ static const char *voltogcmd[]  = { "wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@",
 
 static const char *termcmd[]  = { "st", NULL };
 
-static const char *browsercmd[]  = { "librewolf", NULL };
+static const char *browsercmd[]  = { "librewolf-bin", NULL };
 static const char *roficmd[] = { "rofi", "-show", "drun", NULL };
 
 static const Key keys[] = {
